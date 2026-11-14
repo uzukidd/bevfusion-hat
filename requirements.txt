@@ -1,0 +1,11 @@
+# Existing WSL Conda environment: bevfusion-pytorch / 已有 WSL Conda 环境
+# HAT 3.1.19 is loaded from OE_ROOT/package/host/ai_toolchain; use OE wheels for the vendor packages.
+# HAT 3.1.19 从 OE_ROOT/package/host/ai_toolchain 加载；厂商包使用 OE 配套 wheel。
+torch==2.8.0+cu128
+torchvision==0.23.0+cu128
+horizon-plugin-pytorch==3.1.5+cu128.torch280
+hbdk4-compiler==4.7.5
+numpy==1.23.0
+Pillow==12.3.0
+matplotlib==3.10.9
+shapely==2.1.2

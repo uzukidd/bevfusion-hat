@@ -218,3 +218,11 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Downloaded OE assets and generated model artifacts
+/data/checkpoints/
+/data/vendor/
+/outputs/
+/.horizon_plugin_pytorch_logs/
+/core
+/core.*
