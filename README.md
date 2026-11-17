@@ -11,48 +11,74 @@ See [requirements.txt](.\requirements.txt) for more details.
 
 ## Usages
 
-1. Download float checkpoint:
+1. Download the float checkpoint and HBIR assets directly:
 
    ```bash
-   bash ./scripts/oe_tools.sh oe_assets --model-assets --float-checkpoint
+   bash scripts/download_models.sh
    ```
 
-   ```
-   float-checkpoint-last.pth.tar
-       └─→ Pytorch float model (used only for verification)
    
-   qat.bc
-       └─→ Perform fixed-point conversion targeting S600's nash-p
-               └─→ Generate bevfusion.bc locally
-                       ├─→ Run HBIR inference locally
-                       └─→ Compile to .hbm
-   
-   quantized.bc (official nash-m version)
-       └─→ Run fixed-point inference locally as a comparison baseline
+
+   Downloaded assets are stored as follows.
+
+   ```text
+   data/checkpoints/
+   ├── float-checkpoint-last.pth.tar  # PyTorch float weights: inference or local calibration/export
+   ├── qat.bc                        # Official HBIR with quantization info, before target lowering
+   ├── quantized.bc                  # Official nash-m fixed-point HBIR: inference/comparison
+   └── SHA256SUMS                    # Locally computed SHA-256 hashes
    ```
 
-2. Run float model demo:
+   - **[Float checkpoint](data/checkpoints/float-checkpoint-last.pth.tar):** load with the PyTorch model for float inference, or calibrate and export a new HBIR before nash-p conversion and HBM compilation.
+   - **[qat.bc](data/checkpoints/qat.bc):** already contains quantization information; it is not an unquantized float model. Use it as the source for nash-p fixed-point conversion, then compile the result to S600 HBM. The filename does not imply QAT training.
+   - **[quantized.bc](data/checkpoints/quantized.bc):** already lowered for nash-m. Use it for host inference or as a reference; S600 retargeting requires the corresponding pre-lowering source HBIR, rather than directly converting this file.
+
+2. Run pytorch model demo:
 
    ```bash
    bash scripts/run_float.sh --samples data/samples
    ```
 
-3. Compile `qat.bc` to `.HBM`:
+### Convert float models to HBIR
+
+
+1. Export calibration samples
 
    ```bash
-   bash scripts/compile_s600.sh --opt 1 --jobs 4
+   bash scripts/export_calibration.sh \
+     --samples data/samples \
+     --output outputs/calibration
    ```
 
-4. (Optional) If you want to compile `qat.bc` to `.HBIR` without generating `.HBM`:
+
+2. Compile pytorch model to nash-p `.HBM`:
 
    ```bash
-   bash scripts/compile_s600.sh --convert-only
+   bash scripts/compile_pytorch.sh \
+     --checkpoint data/checkpoints/float-checkpoint-last.pth.tar \
+     --calibration-manifest outputs/calibration/manifest.json \
+     --format hbm \
+     --opt 1 \
+     --jobs 4 \
+     --output outputs/hbm_from_pytorch
    ```
 
-5. Run S600 nash-p HBIR demo:
+3. (Optional) If you want to compile pytorch to `.HBIR` without generating `.HBM`:
 
    ```bash
-   bash scripts/run_demo.sh
+   bash scripts/compile_pytorch.sh \
+     --checkpoint data/checkpoints/float-checkpoint-last.pth.tar \
+     --calibration-manifest outputs/calibration/manifest.json \
+     --format hbir \
+     --output outputs/hbir_from_pytorch
+   ```
+
+4. Run nash-p HBIR demo:
+
+   ```bash
+   bash scripts/run_demo.sh \
+     --model outputs/hbir_from_pytorch/bevfusion.bc \
+     --output outputs/hbir_from_pytorch_validation
    ```
 
 ## Benchmarking

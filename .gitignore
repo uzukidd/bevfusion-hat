@@ -224,5 +224,6 @@ __marimo__/
 /data/vendor/
 /outputs/
 /.horizon_plugin_pytorch_logs/
+/.model_check_results/
 /core
 /core.*
